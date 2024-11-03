@@ -1,0 +1,250 @@
+﻿@model INF272_HW_Assignment_2.Models.LibraryViewModel
+
+@{
+    ViewBag.Title = "Maintain Page";
+}
+
+<div class="container">
+    <h2>Maintain Page</h2>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Authors</h3>
+
+            <!-- Create Button for Authors -->
+            <button class="btn btn-success openModal" data-url="@Url.Action("Create", "authors")" data-title="Create Author">Create Author</button>
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var author in Model.authors)
+                    {
+                        <tr>
+                            <td>@author.name @author.surname</td>
+                            <td>
+                                <!-- Edit Button for Author -->
+                                <button class="btn btn-outline-warning openModal" data-url="@Url.Action("Edit", "authors", new { id = author.authorId })" data-title="Edit Author">Edit</button>
+
+                                <!-- Delete Button for Author -->
+                                <button class="btn btn-outline-danger openModal" data-url="@Url.Action("Delete", "authors", new { id = author.authorId })" data-title="Delete Author">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                    @* Modals for each action will be handled by jQuery dynamically *@
+                </tbody>
+            </table>
+
+            <!-- Pagination for Authors -->
+            <nav>
+                <ul class="pagination">
+                    @for (int i = 1; i <= Model.TotalAuthorsPages; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentAuthorPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Maintain", new { authorPageNumber = i, borrowsPageNumber = Model.CurrentBorrowPage, typesPageNumber = Model.CurrentTypePage })">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+
+        </div>
+
+        <div class="col-md-6">
+            <h3>Types</h3>
+
+            <!-- Create Button for Types -->
+            <button class="btn btn-success openModal" data-url="@Url.Action("Create", "types")" data-title="Create Type">Create Type</button>
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var type in Model.types)
+                    {
+                        <tr>
+                            <td>@type.name</td>
+                            <td>
+                                <!-- Edit Button for Type -->
+                                <button class="btn btn-outline-warning openModal" data-url="@Url.Action("Edit", "types", new { id = type.typeId })" data-title="Edit Type">Edit</button>
+
+                                <!-- Delete Button for Type -->
+                                <button class="btn btn-outline-danger openModal" data-url="@Url.Action("Delete", "types", new { id = type.typeId })" data-title="Delete Type">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Pagination for Types -->
+
+            <nav>
+                <ul class="pagination">
+                    @for (int i = 1; i <= Model.TotalTypesPages; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentTypePage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Maintain", new { authorPageNumber = Model.CurrentAuthorPage, typesPageNumber = i, borrowsPageNumber = Model.CurrentBorrowPage })">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+
+        </div>
+    </div>
+
+    <h3>Borrows</h3>
+
+    <!-- Create Button for Borrows -->
+    <button class="btn btn-success openModal" data-url="@Url.Action("Create", "borrows")" data-title="Create Borrow">Create Borrow</button>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Book</th>
+                <th>Borrowed Date</th>
+                <th>Returned Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var borrow in Model.borrows)
+            {
+                <tr>
+                    <td>@borrow.students.name @borrow.students.surname</td>
+                    <td>@borrow.books.name</td>
+                    <td>@borrow.takenDate</td>
+                    <td>@(borrow.broughtDate.HasValue ? borrow.broughtDate.Value.ToShortDateString() : "Not Returned")</td>
+                    <td>
+                        <!-- Edit Button for Borrow -->
+                        <button class="btn btn-outline-warning openModal" data-url="@Url.Action("Edit", "borrows", new { id = borrow.borrowId })" data-title="Edit Borrow">Edit</button>
+
+                        <!-- Delete Button for Borrow -->
+                        <button class="btn btn-outline-danger openModal" data-url="@Url.Action("Delete", "borrows", new { id = borrow.borrowId })" data-title="Delete Borrow">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Borrows Pagination -->
+    <nav aria-label="Borrows Page Navigation">
+        <ul class="pagination pagination-lg justify-content-center mb-4">
+
+            <!-- Previous Set of Pages Link -->
+            @if (Model.BStartPage > 1)
+            {
+                <li class="page-item">
+                    <button class="btn btn-primary" onclick="location.href='@Url.Action("Maintain", new {
+                    borrowsPageNumber = Model.BStartPage - 1,
+                    authorPageNumber = Model.CurrentAuthorPage,
+                    typesPageNumber = Model.CurrentTypePage,
+                })'">Prev</button>
+                </li>
+            }
+
+            <!-- Individual Page Links (Shows up to 10 pages at a time) -->
+            @for (int i = Model.BStartPage; i <= Model.BEndPage; i++)
+            {
+                <li class="page-item @(i == Model.CurrentBorrowPage ? "active" : "")">
+                    <a class="page-link" href="@Url.Action("Maintain", new {
+                    borrowsPageNumber = i,
+                    authorPageNumber = Model.CurrentAuthorPage,
+                    typesPageNumber = Model.CurrentTypePage
+                })">@i</a>
+            </li>
+        }
+
+            <!-- Next Set of Pages Link -->
+            @if (Model.BEndPage < Model.TotalBorrowsPages)
+            {
+                <li class="page-item">
+                    <button class="btn btn-primary" onclick="location.href='@Url.Action("Maintain", new {borrowsPageNumber = Model.BEndPage + 1,authorPageNumber = Model.CurrentAuthorPage,
+                    typesPageNumber = Model.CurrentTypePage})'">Next</button>
+                </li>
+            }
+        </ul>
+    </nav>
+
+</div>
+
+
+
+<!-- Shared Modal Structure for Create/Edit/Delete -->
+<div id="modalContainer" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Form content will be loaded here dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery Script -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Function to open the modal and load dynamic content
+        $(".openModal").click(function (e) {
+            e.preventDefault();
+
+            var url = $(this).data("url");
+            var title = $(this).data("title");
+
+            // Set the modal title
+            $("#modalTitle").text(title);
+
+            // Load content dynamically from the URL into modal body
+            $.get(url, function (data) {
+                $("#modalBody").html(data);
+
+                // Show the modal
+                $("#modalContainer").modal("show");
+            });
+        });
+
+        // Handle form submission
+        $(document).on("click", "#modalSubmitBtn", function (e) {
+            e.preventDefault();
+
+            // Serialize form data
+            var form = $("#modalBody").find("form");
+            var actionUrl = form.attr("action");
+            var formData = form.serialize();
+
+            // Submit the form data via POST
+            $.post(actionUrl, formData, function (data) {
+                if (data.success) {
+                    // Close the modal on successful form submission
+                    $("#modalContainer").modal("hide");
+                } else {
+                    // If validation fails, reload form inside the modal with errors
+                    $("#modalBody").html(data);
+                }
+            });
+        });
+
+        // Clear modal content after it is hidden
+        $('#modalContainer').on('hidden.bs.modal', function () {
+            $("#modalBody").html(""); // Clear modal content when hidden
+        });
+    });
+</script>
+
+
+

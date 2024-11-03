@@ -1,0 +1,194 @@
+﻿
+@model INF272_HW_Assignment_2.Models.LibraryViewModel
+
+@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="container">
+    <div class="row">
+        <!-- Students Table -->
+        <div class="col-md-6">
+            <h2>Students List</h2>
+            <div class=" accordion-button">
+                <button class="btn btn-primary openModal" data-url="@Url.Action("Create", "students")" data-title="Create Student">Create Student</button>
+            </div>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Surname</th>
+                        <th>Date Of Birth</th>
+                        <th>Gender</th>
+                        <th>Class</th>
+                        <th>Point</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in Model.students)
+                    {
+                        <tr>
+                            <td>@student.name</td>
+                            <td>@student.surname</td>
+                            <td>@student.birthdate</td>
+                            <td>@student.gender</td>
+                            <td>@(@student.@class)</td>
+                            <td>@student.point</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <!-- Students Pagination -->
+            <nav aria-label="Students Page Navigation">
+                <ul class="pagination justify-content-center mb-4">
+                    @for (int i = Model.StartPage; i <= Model.EndPage; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentStudentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { studentPageNumber = i, bookPageNumber = Model.CurrentBookPage })">@i</a>
+                        </li>
+                    }
+                </ul>
+
+                <!-- Show Next Pages Button -->
+                @if (Model.EndPage < Model.TotalStudentsPages)
+                {
+                    <button class="btn btn-primary"
+                            onclick="location.href='@Url.Action("Index", new { studentPageNumber = Model.EndPage + 1, bookPageNumber = Model.CurrentBookPage })'">
+                        Show Next Pages
+                    </button>
+                }
+                @if (Model.StartPage > 1)
+                {
+                    <button class="btn btn-secondary"
+                            onclick="location.href='@Url.Action("Index", new { studentPageNumber = Model.StartPage - 1, bookPageNumber = Model.CurrentBookPage })'">
+                        Go Back
+                    </button>
+                }
+            </nav>
+        </div>
+
+        <!-- Books Table -->
+        <div class="col-md-6">
+            <h2>Books List</h2>
+            <div class=" align-content-md-end">
+                <button class="btn btn-primary openModal" data-url="@Url.Action("Create", "books")" data-title="Create Book">Create Book</button>
+            </div>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var book in Model.books)
+                    {
+                        <tr>
+                            <td>@book.name</td>
+                            <td>@book.authors.name &nbsp; @book.authors.surname </td>
+                            <td>@book.types.name</td>
+                            <td>@(book.borrows != null && book.borrows.Any(b => b.broughtDate == null) ? "Out" : "Available")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <!-- Books Pagination -->
+            <nav aria-label="Books Page Navigation">
+                <ul class="pagination justify-content-center mb-4">
+                    @for (int i = Model.BKStartPage; i <= Model.BKEndPage; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentBookPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { studentPageNumber = Model.CurrentStudentPage, bookPageNumber = i })">@i</a>
+                        </li>
+                    }
+                </ul>
+                <!-- Show Next Pages Button -->
+                @if (Model.BKEndPage < Model.TotalBooksPages)
+                {
+                    <button class="btn btn-primary"
+                            onclick="location.href='@Url.Action("Index", new { booksPageNumber = Model.BKEndPage + 1, studentPageNumber = Model.CurrentStudentPage })'">
+                        Show Next Pages
+                    </button>
+                }
+                @if (Model.BKStartPage > 1)
+                {
+                    <button class="btn btn-secondary"
+                            onclick="location.href='@Url.Action("Index", new { booksPageNumber = Model.BKStartPage - 1, studentPageNumber = Model.CurrentStudentPage })'">
+                        Go Back
+                    </button>
+                }
+            </nav>
+        </div>
+
+    </div>
+</div>
+<!-- Shared Modal Structure for Create/Edit/Delete -->
+<div id="modalContainer" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Form content will be loaded here dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery Script -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Function to open the modal and load dynamic content
+        $(".openModal").click(function (e) {
+            e.preventDefault();
+
+            var url = $(this).data("url");
+            var title = $(this).data("title");
+
+            // Set the modal title
+            $("#modalTitle").text(title);
+
+            // Load content dynamically from the URL into modal body
+            $.get(url, function (data) {
+                $("#modalBody").html(data);
+
+                // Show the modal
+                $("#modalContainer").modal("show");
+            });
+        });
+
+        // Handle form submission
+        $(document).on("click", "#modalSubmitBtn", function (e) {
+            e.preventDefault();
+
+            // Serialize form data
+            var form = $("#modalBody").find("form");
+            var actionUrl = form.attr("action");
+            var formData = form.serialize();
+
+            // Submit the form data via POST
+            $.post(actionUrl, formData, function (data) {
+                if (data.success) {
+                    // Close the modal on successful form submission
+                    $("#modalContainer").modal("hide");
+                } else {
+                    // If validation fails, reload form inside the modal with errors
+                    $("#modalBody").html(data);
+                }
+            });
+        });
+
+        // Clear modal content after it is hidden
+        $('#modalContainer').on('hidden.bs.modal', function () {
+            $("#modalBody").html(""); // Clear modal content when hidden
+        });
+    });
+</script>
